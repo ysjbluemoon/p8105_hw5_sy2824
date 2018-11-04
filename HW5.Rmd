@@ -63,9 +63,16 @@ file = read_csv("file/homicide-data.csv") %>%
 homicide_data = 
   file %>% 
   mutate(city_state = str_c(city, "," , state)) %>% 
-  group_by(city_state) %>% 
+  group_by(city, state) %>% 
   summarize(solved = sum(disposition == "Closed by arrest"), 
             unsolved = sum(disposition == "Closed without arrest" | disposition == "Open/No arrest")) 
 ```
 
+
+```{r}
+homicide_data %>% 
+  filter(city == "Baltimore") 
+  prop.test(homicide_data$unsolved, homicide_data$unsolved)
+
+```
 
