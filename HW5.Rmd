@@ -56,12 +56,16 @@ arm_data %>%
 
 ```{r}
 # read data and data cleaning
-df = read_csv("./file/homicide-data.csv") %>% 
-  janitor::clean_names() %>% 
-  View
+file = read_csv("file/homicide-data.csv") %>% 
+  janitor::clean_names() 
 
+# Describe the raw data
 homicide_data = 
   file %>% 
-  mutate(city_state = c(city, ", " , state))
+  mutate(city_state = str_c(city, "," , state)) %>% 
+  group_by(city_state) %>% 
+  summarize(solved = sum(disposition == "Closed by arrest"), 
+            unsolved = sum(disposition == "Closed without arrest" | disposition == "Open/No arrest")) 
 ```
+
 
