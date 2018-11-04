@@ -1,0 +1,59 @@
+---
+title: "HW5"
+author: "Sijia Yue"
+data: 2018-11-03
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(rvest)
+
+```
+
+## Problem 1
+* Start with a dataframe containing all file names
+```{r}
+file_name = list.files(path = "data")
+file_base = "./data/"
+file_path = str_c(file_base, file_name)
+
+output = vector("list", length = 20)
+
+output = 
+  map(file_path, read.csv) 
+
+arm_data = 
+  bind_rows(output) %>% 
+  as.tibble() %>% 
+  mutate(id = as.integer(row_number())) %>% 
+  mutate(name = file_name) %>% 
+  separate(name, into = c("arm","subject_id"), sep = "_") %>% 
+  mutate(subject_id = as.numeric(str_replace(subject_id, ".csv",""))) %>% 
+  gather(key = week, value = observation, week_1:week_8) %>% 
+  mutate(week = as.numeric(str_replace(week, "week_",""))) %>% 
+  mutate(arm = as.factor(arm))
+```
+
+Make the spaghetti plot
+```{r}
+arm_data %>% 
+  ggplot(aes(x = week, y = observation, group = id)) +
+  geom_line(aes(color = id), alpha = .5) +
+  facet_grid(.~arm) +
+  labs(
+    title = "Weekly observation of control and experimental arm",
+    x = "Week number",
+    y = "Weekly observations"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  viridis::scale_color_viridis(discrete = FALSE)
+```
+
+## Problem 2
+```{r}
+
+```
+
