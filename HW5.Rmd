@@ -53,7 +53,15 @@ arm_data %>%
 ```
 
 ## Problem 2
-```{r}
 
+```{r}
+# read data and data cleaning
+df = read_csv("./file/homicide-data.csv") %>% 
+  janitor::clean_names() %>% 
+  View
+
+homicide_data = 
+  file %>% 
+  mutate(city_state = c(city, ", " , state))
 ```
 
