@@ -66,13 +66,28 @@ homicide_data =
   group_by(city, state) %>% 
   summarize(solved = sum(disposition == "Closed by arrest"), 
             unsolved = sum(disposition == "Closed without arrest" | disposition == "Open/No arrest")) 
+
 ```
 
 
 ```{r}
+baltimore = 
 homicide_data %>% 
-  filter(city == "Baltimore") 
-  prop.test(homicide_data$unsolved, homicide_data$unsolved)
+  filter(city == "Baltimore")
 
+baltimore.prop = 
+  prop.test(baltimore$solved, baltimore$unsolved) %>% 
+    broom::tidy()
+
+pull(baltimore.prop, estimate)  
+pull(baltimore.prop, conf.low) 
+pull(baltimore.prop, conf.high)
+
+```
+
+```{r}
+prop_data = 
+  prop.test(homicide_data$unsolved, homicide_data$solved) 
+  
 ```
 
