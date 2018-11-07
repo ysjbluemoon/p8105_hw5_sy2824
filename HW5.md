@@ -5,18 +5,23 @@ Sijia Yue
 Problem 1
 ---------
 
--   Start with a dataframe containing all file names
+### Data cleaning
+
+Create a dataframe that contains subject ID, arm and observations.
 
 ``` r
+# save file paths into string
 file_name = list.files(path = "data")
 file_base = "./data/"
 file_path = str_c(file_base, file_name)
 
 output = vector("list", length = 20)
 
+# use map function to load files in iterations
 output = 
   map(file_path, read.csv) 
 
+# save file into dataframe and data cleaning
 arm_data = 
   bind_rows(output) %>% 
   as.tibble() %>% 
@@ -28,6 +33,8 @@ arm_data =
   mutate(week = as.numeric(str_replace(week, "week_",""))) %>% 
   mutate(arm = as.factor(arm))
 ```
+
+### Plot
 
 Make the spaghetti plot
 
@@ -46,7 +53,7 @@ arm_data %>%
   viridis::scale_color_viridis(discrete = FALSE)
 ```
 
-<img src="HW5_files/figure-markdown_github/unnamed-chunk-2-1.png" width="80%" />
+<img src="HW5_files/figure-markdown_github/unnamed-chunk-2-1.png" width="80%" /> There is an obvious difference between the control arm and the experimental arm. In control arm group, the weekly observation stays static. In contrast, the weekly observations continues increasing as the week number grows in experimental arm group.
 
 Problem 2
 ---------
