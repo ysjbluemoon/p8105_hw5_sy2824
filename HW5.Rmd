@@ -60,40 +60,65 @@ arm_data %>%
   theme(legend.position = "bottom") +
   viridis::scale_color_viridis(discrete = FALSE)
 ```
+
 There is an obvious difference between the control arm and the experimental arm. In control arm group, the weekly observation stays static. In contrast, the weekly observations continues increasing as the week number grows in experimental arm group.
 
 ## Problem 2
-
+### Read file and data cleaning
 ```{r}
-# read data and data cleaning
+# read data into R
 file = read_csv("file/homicide-data.csv") %>% 
   janitor::clean_names() 
+```
 
-# Describe the raw data
+The dataset contains `r nrow(file)` homicides in 28 different states from 2007 to 2017.
+It has `r ncol(file)` variables, which indicates the date, victim name, race, age, sex and location.
+
+```{r}
+# Data cleaning 
 homicide_data = 
   file %>% 
+  # Add new variable
   mutate(city_state = str_c(city, ", " , state)) %>% 
   group_by(city_state) %>% 
+  # Define the status of cases
   summarize(solved = sum(disposition == "Closed by arrest"), 
             unsolved = sum(disposition == "Closed without arrest" | disposition == "Open/No arrest"),
-            total = sum(solved + unsolved)) 
+            total = sum(solved + unsolved))  
+
+# a brief look of the tidy data  
+homicide_data %>% 
+  knitr::kable()
 
 ```
 
+For city `Tulsa` in state `AL`, there only have one solved case and no unsolved case. So, I guess this should be a typo which I would filter in away from the dataset.
 
+```{r}
+homicide_data =
+  homicide_data %>% 
+  filter(city_state != "Tulsa, AL")
+```
+
+### Proportion tests 
+First, I will use `prop.test()` function to implement a proportion test for Baltimore to estimate the proportion of unsolved cases.
 ```{r}
 baltimore = 
 homicide_data %>% 
   filter(city_state == "Baltimore, MD")
 
-baltimore.prop = 
-  prop.test(baltimore$unsolved, baltimore$total) %>% 
+# Put Baltimore into the function
+prop.test(baltimore$unsolved, baltimore$total) %>% 
   broom::tidy() %>% 
-  select(estimate, conf.low, conf.high)
+  select(estimate, conf.low, conf.high) %>% 
+  knitr::kable(digits = 3)
 ```
 
-Write the function
+So, the estimation of proportion for unsolved homicide cases is 0.646 with a CI of (0.628, 0.663).
+
+Then, I wrote the function of implementing `prop.test()` for different cities to calculate the estimated proportion of unsolved cases and CI.
 ```{r}
+# Write the function
 prop_test = function(cities){
   city_name = 
     homicide_data %>% 
@@ -103,29 +128,27 @@ prop_test = function(cities){
     broom::tidy() %>% 
     select(estimate, conf.low, conf.high)
 }
+
 # Check the function
 prop_test("Buffalo, NY")
  
 ```
 
-Run the iteration
+Next, use `map()` function to run the iteration of all cities.
 ```{r}
 prop_data = 
-  map(homicide_data$city_state, prop_test) %>% 
-  bind_rows() %>% 
-  mutate(id = as.integer(row_number()))
-
-homicide_data = 
-  homicide_data %>% 
-  mutate(id = as.integer(row_number()))
-
-prop_results = left_join(prop_data, homicide_data, by = "id") %>% 
+  # nest the data for the case status
+  nest(homicide_data, solved:total) %>% 
+  # Using the map function to do the iteration
+  mutate(prop_test = map(homicide_data$city_state, prop_test)) %>% 
+  select(city_state, prop_test) %>% 
+  unnest() %>% 
   select(city_state, estimate, conf.low, conf.high)
 ```
 
-Plot the CI
+Finally, using the results from mapping, I plot the CI of the unsolved cases proportion estimation for different cities.
 ```{r}
-prop_results %>% 
+prop_data %>% 
   mutate(city_state = fct_reorder(city_state, estimate)) %>% 
   ggplot(aes(x = city_state, y = estimate, ymin = conf.low, ymax = conf.high, color = city_state)) +
   geom_point() +
