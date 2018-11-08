@@ -31,7 +31,7 @@ arm_data =
   mutate(subject_id = as.numeric(str_replace(subject_id, ".csv",""))) %>% 
   gather(key = week, value = observation, week_1:week_8) %>% 
   mutate(week = as.numeric(str_replace(week, "week_",""))) %>% 
-  mutate(arm = as.factor(arm))
+  mutate(arm = as.factor(arm))  
 ```
 
 ### Plot
